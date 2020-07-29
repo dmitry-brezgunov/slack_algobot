@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import Sum
 
 
 class Faculty(models.Model):
@@ -136,41 +135,22 @@ class Hint(models.Model):
         return self.text
 
 
-class Restriction(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE,
-        related_name='restriction', verbose_name='Студент')
-    problem = models.ForeignKey(
-        Problem, on_delete=models.CASCADE,
-        related_name='restriction', verbose_name='Задача')
-    contest = models.ForeignKey(
-        Contest, on_delete=models.CASCADE,
-        related_name='restriction', verbose_name='Контест')
-    request_counter = models.PositiveSmallIntegerField(
-        default=0, verbose_name='Количество запросов на тесты')
-
-    def is_in_limit(self):
-        contest_counter = Restriction.objects.filter(
-            user=self.user, contest=self.contest).aggregate(
-                result=Sum('request_counter'))
-        return (self.problem.test_limit > self.request_counter and
-                self.contest.test_limit > contest_counter['result'])
-
-    def __str__(self):
-        return f'{self.user}, Задача: {self.problem}'
-
-    class Meta:
-        verbose_name = 'Ограничение'
-        verbose_name_plural = 'Ограничения'
-
-
-class UserTestPair(models.Model):
+class RequestedTest(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE,
         related_name='user_test_pair', verbose_name='Студент')
     test = models.ForeignKey(
         Test, on_delete=models.CASCADE,
         related_name='user_test_pair', verbose_name='Тест')
+
+    def is_in_limit(self):
+        tests_per_problem = RequestedTest.objects.filter(
+            user=self.user, test__problem=self.test.problem).count()
+        tests_per_contest = RequestedTest.objects.filter(
+            user=self.user,
+            test__problem__contest_number=self.test.problem.contest_number).count()
+        return (self.test.problem.test_limit > tests_per_problem and
+                self.test.problem.contest_number.test_limit > tests_per_contest)
 
     class Meta:
         verbose_name = 'Запрошенный студентом тест'
