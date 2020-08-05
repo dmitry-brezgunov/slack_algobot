@@ -64,25 +64,25 @@ class Contest(models.Model):
         verbose_name='Номер контеста')  # unqiue=True?
     contest_title = models.CharField(
         max_length=255, verbose_name='Название контеста')
-    sprint_number = models.ManyToManyField(
+    sprint = models.ManyToManyField(
         Sprint, blank=True, related_name='contest',
         verbose_name='Спринт')
     test_limit = models.PositiveSmallIntegerField(
         default=10, verbose_name='Лимит тестов')
 
     class Meta:
-        verbose_name = "Контест"
-        verbose_name_plural = "Контесты"
+        verbose_name = 'Контест'
+        verbose_name_plural = 'Контесты'
 
     def __str__(self):
         return f'{str(self.contest_number)}. {self.contest_title}'
 
 
 class Problem(models.Model):
-    sprint_number = models.ForeignKey(
+    sprint = models.ForeignKey(
         Sprint, on_delete=models.SET_NULL, blank=True, null=True,
         related_name='problem', verbose_name='Спринт')
-    contest_number = models.ForeignKey(
+    contest = models.ForeignKey(
         Contest, on_delete=models.CASCADE,
         related_name='problem', verbose_name='Контест')
     title = models.CharField(max_length=3, verbose_name='Название задачи')
@@ -96,8 +96,8 @@ class Problem(models.Model):
         verbose_name_plural = 'Задачи'
 
     def __str__(self):
-        return (f'{self.sprint_number} '
-                f'{self.contest_number} '
+        return (f'{self.sprint} '
+                f'{self.contest} '
                 f'{self.title}. '
                 f'{self.full_title}')
 
@@ -148,9 +148,12 @@ class RequestedTest(models.Model):
             user=self.user, test__problem=self.test.problem).count()
         tests_per_contest = RequestedTest.objects.filter(
             user=self.user,
-            test__problem__contest_number=self.test.problem.contest_number).count()
+            test__problem__contest=self.test.problem.contest).count()
         return (self.test.problem.test_limit > tests_per_problem and
-                self.test.problem.contest_number.test_limit > tests_per_contest)
+                self.test.problem.contest.test_limit > tests_per_contest)
+
+    def __str__(self):
+        return f'Студент {self.user}. {self.test}'
 
     class Meta:
         verbose_name = 'Запрошенный студентом тест'

@@ -24,14 +24,14 @@ class SprintAdmin(admin.ModelAdmin):
 class ContestAdmin(admin.ModelAdmin):
     list_display = ('contest_number', 'contest_title', 'test_limit', )
     search_fields = ('contest_number', 'contest_title', )
-    list_filter = ('sprint_number', )
+    list_filter = ('sprint', )
 
 
 class ProblemAdmin(admin.ModelAdmin):
-    list_display = ('title', 'full_title', 'sprint_number',
-                    'contest_number', 'test_limit', )
+    list_display = ('title', 'full_title', 'sprint',
+                    'contest', 'test_limit', )
     search_fields = ('title', 'full_title', )
-    list_filter = ('sprint_number', 'contest_number', )
+    list_filter = ('sprint', 'contest', )
 
 
 class TestAdmin(admin.ModelAdmin):
